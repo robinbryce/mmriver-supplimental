@@ -655,7 +655,7 @@ Which blockchain? It really doesn't matter much, and using more than one is like
 
 The price of this is the need to publish a suitable specification for [draft-ietf-cose-merkle-tree-proofs](https://datatracker.ietf.org/doc/draft-ietf-cose-merkle-tree-proofs/) and to create implementations and examples for verification.
 
-The draft found [here](https://www.ietf.org/archive/id/draft-bryce-cose-merkle-mountain-range-proofs-00.html)
+My [MMRIVER draft](https://www.ietf.org/archive/id/draft-bryce-cose-merkle-mountain-range-proofs-00.html) provides the specification and registration request.
 
 And examples for verification can be found in [datatrails-scitt-samples](https://github.com/datatrails/datatrails-scitt-samples/blob/main/datatrails_scitt_samples/cose_receipt_verification.py) and also [veracity](https://github.com/datatrails/veracity/) via [go-datatrails-merklelog](https://github.com/datatrails/go-datatrails-merklelog)
 
