@@ -10,11 +10,11 @@ So now we are talking about Merkle tree roots and the link between the woods and
 
 An accumulator is useful forever as is, and even where you need a fresh one, you don't need to update it very often. "Mono" roots change with every addition and that is frustrating in many ways. As we will see, a very useful accumulator can be made directly from a merkle tree as it grows - if we change how we deal with the incomplete sub trees.
 
-The affordances of asynchronous cryptographic accumulators are a large part of why, for transparency logs, I prefer an alternate, but I feel complimentary, construction to the classic merkle tree scheme established by RFC9162[6]
+The affordances of asynchronous cryptographic accumulators are a large part of why, for transparency logs, I prefer an alternate, but I feel complimentary, construction to the classic merkle tree scheme established by RFC9162[^6]
 
 The easiest way to get such an accumulator I know of is by using a Merkle Mountain Range.
 
-Merkle Mountain Ranges (MMR) are attributed to Peter Todd [1], and which have also been described variously as "history trees" [2], "post order storage layout"[3] and "binary numeral trees"[4]. They naturally provide the "cryptographic asynchronous accumulator" described in [5]. They largely stem from the observation that flat base trees are both more manageable and more efficient to deal with than other constructions - such as the semi stable "not flat base" merkle trees described in  RFC9162[6]
+Merkle Mountain Ranges (MMR) are attributed to Peter Todd [^1], and which have also been described variously as "history trees" [^2], "post order storage layout"[^3] and "binary numeral trees"[^4]. They naturally provide the "cryptographic asynchronous accumulator" described in [^5]. They largely stem from the observation that flat base trees are both more manageable and more efficient to deal with than other constructions - such as the semi stable "not flat base" merkle trees described in  RFC9162[^6]
 
 There are significant similarities. Essentially MMR's are equivalent to the incomplete sub trees in Certificate Transparency (CT) binary Merkle trees, and differ only in how a single root is produced. MMR's use an algorithm to "bag the incomplete peaks" rather than adding temporary siblings to the tree that later need to be updated (re-written). This difference means CT merkle trees are not write once with respect to underlying storage but MMR's are. It also means that some portion of the CT Merkle Trees need to be re-built in ram (cached or otherwise) before additions can take place, while for MMR's the correct position to place the next node when adding leaves is always the very end of the log.
 
@@ -43,7 +43,7 @@ Property 1: If you have obtained a verifiable receipt for an item once, you can 
 
 Property 2: The receipt I have will be verifiable against future states for a well-defined time. With each update of the receipt, its "verifiability" time doubles. Here, "time" is an approximation; specifically, it is the number of additions to the log after the entry that counts.
 
-These properties are defined formally as "Low Update Frequency" and "Old-Accumulator Compatibility" in [5]
+These properties are defined formally as "Low Update Frequency" and "Old-Accumulator Compatibility" in [^5]
 
 Taking these together, we can see that there is no requirement for "keeping up to date." Because of Property 1, even if my receipt has become outdated, I am guaranteed that the new receipt will verify against the material in the stale receipt. And if it doesn't, I can prove the log is lying.  And because of Property 2, if I am concerned that the log service may "go away", preventing access to the fresh log data necessary to show my historic receipt continues to be included in the log, I know there is a low, and ever-decreasing, rate at which an accumulator update will require path extension for my historic receipt.
 
@@ -55,9 +55,9 @@ Lastly, because of the stability of the material in the log—due to the "flat b
 
 Every section of the log can be covered by a signature that attests to the entire historic state using a single conventional root. The root is computed according to the MMR "peak bagging" algorithm. The bagged peaks are, in fact, precisely the non-empty nodes of the accumulator at that time. A signature over an accumulator is then equivalent to, and also more useful than, a signature over the tree head.
 
-In fact, rather than "bagging", it is advantageos to instead sign the list of peaks and also the individual peaks in that list.
+In fact, rather than "bagging", it is advantageous to instead sign the list of peaks and also the individual peaks in that list.
 
-If instead we individualy sign the peaks *and* the accumulator (list of peaks), we are, in effect *pre-signing* the receipts for all intries in the log up to that point. It is not necessary or even helpful to sign the proof material. The signature is always over the result of the proof. With accumulator based receipts those results are no longer unique for each addition: Only the *proofs* are unique and those are not signed.
+If instead we individualy sign the peaks *and* the accumulator (list of peaks), we are, in effect *pre-signing* the receipts for all entries in the log up to that point. It is not necessary or even helpful to sign the proof material. The signature is always over the result of the proof. With accumulator based receipts those results are no longer unique for each addition: Only the *proofs* are unique and those are not signed.
 
 This works because while the accumulator state is unique for each addition, the peaks in it change less and less often as the log grows.
 
@@ -651,6 +651,7 @@ Which blockchain? It really doesn't matter much, and using more than one is like
 * There is no need to reveal the specific subject of verification to the log operator. These attestations can be cached locally and have a low and well defined rate of refresh. 
 * Once obtained, a receipt can be verified in perpetuity. It may require an updated accumulator to do so, but even so, the proofs in the original receipt are guaranteed to be sub paths of the proofs against all future receipts for the same entry.
 * Once covered by an attestation, your copy of the log is as good as any copy.  The verifiable data will not change. Because we have obtained a storage scheme which is naturally chunked, performant to write, and almost trivial to replicate or archive safely.
+* Receipts can be *self served* from any replicated log without revealing the item of interest: The checkpoints act as presigned receipts to which proof material can be attached without re-signing.
 
 The price of this is the need to publish a suitable specification for [draft-ietf-cose-merkle-tree-proofs](https://datatracker.ietf.org/doc/draft-ietf-cose-merkle-tree-proofs/) and to create implementations and examples for verification.
 
