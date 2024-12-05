@@ -89,7 +89,7 @@ We can say that is
 \frac{2^{64}}{450,000 * 24 * 365}
 ```
 
-which is roughly 4.6 million *milena*. It would be nice to think that the use of verifiable data in the world would increase enough for that limit to matter in practice. And even were that to happen, all other advances being equal, physical vs logical logs is still a perfectly satisfactory approach.
+which is roughly 4.6 million *milenia*. It would be nice to think that the use of verifiable data in the world would increase enough for that limit to matter in practice. And even were that to happen, all other advances being equal, physical vs logical logs is still a perfectly satisfactory approach.
 
 Even so, the accumulator for that very far future tree will still only be 64 entries long.
 
@@ -547,28 +547,41 @@ Sympathetic instructions, or compact look up table implementations exist for oth
 
 It turns out that the accumulator is also precisely the only set of nodes we will ever need to refer back to when adding future nodes to the tree and when producing receipts for future entries.
 
-This enables a chunking approach that guarantees each chunk is self-contained for both addition and proof generation. This property alone makes it practical to maintain the log directly in cloud storage. The write-once nature is perfect
-for ever-lasting technologies like [Microsoft Project Silica](https://www.tomshardware.com/news/microsoft-repositions-7tb-project-silica-glass-media-as-a-cloud-storage-solution), which stores data on glass, with an infinite lifespan with no degrdation and no costs for cold storage. As the entries in older blobs become uninteresting, they are conveniently archived to cold storage in the first instance.
+This enables a chunking approach that guarantees each chunk is self-contained for both addition and proof generation. This property alone makes it practical to maintain the log directly in cloud storage. The write-once nature is perfect for ever-lasting technologies like [Microsoft Project Silica](https://www.tomshardware.com/news/microsoft-repositions-7tb-project-silica-glass-media-as-a-cloud-storage-solution), which stores data on glass, with an infinite lifespan with no degrdation and no costs for cold storage. As the entries in older blobs become uninteresting, they are conveniently archived to cold storage in the first instance.
 
 If you don't want to pay for "forever data," you can make a clean break by deleting the chunks up to the last point you cared about. The accumulator guarantees you never need to refer back to them when dealing with entries from after the break.  This enables entries that are critical to record for a period of time, but have no value once they expire, freeing up storage space and computation.
 
 And finally, because the nodes are "write once" and stable immediately, the node data can be publicly available, and safely replicable, instantly.
 
-Taking Azure Blob Storage as our cost basis, replicating all or part of a log costs us $0.000004 per chunk read. This is expensive enough that applying a rate limit to throttle the theoretical 20,000 requests per second supported by Azure Blobs is necessary. However, it is still ridiculously cheap compared to the effort of managing persistent disks in a cloud environment to achieve "disk writes," which, in fact, end up being backed by Azure Block Blobs anyway.
+Taking Azure Blob Storage as our cost basis, replicating all or part of a log costs us $0.000004 per chunk read. It is important to note when doing the arithmetic on cost per entry that that each read chunk contains 2^height leaves. Even so, going flat out, this is still  expensive enough that applying a rate limit to throttle the theoretical 20,000 requests per second supported by Azure Blobs is necessary. Necessary even if adding things to a merkle tree was the *only* operation that was necessary to provide reliable and useful long term verifiable provenance. However, it is still ridiculously cheap compared to the effort of managing persistent disks in a cloud environment to achieve "disk writes," which, in fact, end up being backed by Azure Block Blobs anyway.
 
-If you want to do bare metal and attached NVMe's, fill your boots. In my opinion, flat base, write once, trees are going to make that considerably easier to accomplish as well.
+The crucial points here are the relatively low cost imposed to ensure availability and redundancy of the verifiable data and the simplicity of the model for retiring data that is not valuable any more. It's not necessary to sustain 20,000 reads per second to replicate a typical log.
+
+For raw performance on write, if you want to do bare metal and attached NVMe's, fill your boots. In my opinion, flat base, write once, trees are going to make that considerably easier to accomplish as well.
 
 A chunk can easily contain 4 MB of data and still achieve a sub-10ms read/modify/write time. With a hash size of 32 bytes, that equates to 131,072 nodes and 65,537 leaf entries. The height of the sub tree for such a chunk size is 17.
 
 Remembering our numbers for global scale this is fast but probably not fast enough.
 
+## The enormous ambition of providing provenance for all data that matters.  
+
+These detailed technical considerations deny the bigger picture. If we want to live in a world where all "moments that mater" have verifiable, non-repudiable and tamper evident provenance, the scale is enormous.  If we take "only" all digital certificates as a yard stick, and conveniently ignore the cost of everything except putting them in a log, we already have a scale that challenges the operators of those specific kinds of logs.
+
 450,000 new certificates are added to logs [every hour](https://ct.cloudflare.com/), which is 125 per second, or 8ms per certificate. While this is theoretically under the 10ms we mentioned above, "other stuff" has to happen. And in any case, we are talking about general-purpose verifiable log data structures rather than limiting ourselves to digital certificate transparency.
 
 With this construction however, accounting for the chunk boundaries, we can add up to $$2^{{m}}$$
 
-nodes per write cycle. Here, _m_ is the height of the chunk, and in our example above is 65k worth of *leaves*. With amortization, we can get 2 or 3 orders of magnitute more out of high throughput log scenarios.
+nodes per write cycle. Here, _m_ is the height of the chunk, and in our example above is 65k worth of *leaves*. With amortization, we can get 2 or 3 orders of magnitude more out of high throughput log scenarios.
 
 But even so, if we widen the scope beyond specific use cases like certificates, as we noted earlier, it is hard to see how any single log implementation can possibly keep up. Schemes that lend themselves to simple replication and sharding seem obviously better and more pleasant to work with.
+
+If we genuinely want this kind of trust for data that matters we need *more* log operators *and* more logs. Operators that can accommodate multiple logs will have an advantage in both scope and scale. Given that there isn't likely, almost by definition, one log (or log operator) to rule them all, we need solid work on interoperability and standards. This allows parties to be served consistently, by the appropriate flavour of log, without being forced to accept trade offs that don't suit their needs. Ultimately, it's the data that should be interesting not the log format.
+
+How we get things on to that log in a way that underpins this trust and enables discoverability and analysis is a *lot* more interesting in my opinion. The verifiable data structure itself is interesting from the operators perspective for how it supports this.
+
+Back to the micro level, accumulator based logs are especially optimized for fast appends, simplicity of *bounded* replication and pruning of data for moments that don't matter any more. They are are also uniquely valuable for how they simplify receipt management for the data owner. Nobody wants receipts until they need them and typically if you didn't save one at the time you are out of luck. With a receipt based on a signed accumulator peak it is possible for the log operator to  *pre sign* the receipt (over the peak). The proof can be attached later by the log operator or *any* party in possession of the appropriate log chunk. There seem to me to be privacy benefits to this approach as well.
+
+The details on how this works, and also of efforts to help with standardization, can be found in the [MMRIVER draft](https://www.ietf.org/archive/id/draft-bryce-cose-merkle-mountain-range-proofs-00.html)
 
 # So how does the accumulator help with storage organization ?
 
