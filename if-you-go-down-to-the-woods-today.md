@@ -565,7 +565,7 @@ Remembering our numbers for global scale this is fast but probably not fast enou
 
 ## The enormous ambition of providing provenance for all data that matters.  
 
-These detailed technical considerations deny the bigger picture. If we want to live in a world where all "moments that mater" have verifiable, non-repudiable and tamper evident provenance, the scale is enormous.  If we take "only" all digital certificates as a yard stick, and conveniently ignore the cost of everything except putting them in a log, we already have a scale that challenges the operators of those specific kinds of logs.
+These detailed technical considerations deny the bigger picture. If we want a world where all data informing automated decision making has verifiable, non-repudiable and tamper evident provenance, the scale is enormous.  If we take "only" all digital certificates as a yard stick, and conveniently ignore the cost of everything except putting them in a log, we already have a scale that challenges the operators of those specific kinds of logs.
 
 450,000 new certificates are added to logs [every hour](https://ct.cloudflare.com/), which is 125 per second, or 8ms per certificate. While this is theoretically under the 10ms we mentioned above, "other stuff" has to happen. And in any case, we are talking about general-purpose verifiable log data structures rather than limiting ourselves to digital certificate transparency.
 
@@ -575,13 +575,13 @@ nodes per write cycle. Here, _m_ is the height of the chunk, and in our example 
 
 But even so, if we widen the scope beyond specific use cases like certificates, as we noted earlier, it is hard to see how any single log implementation can possibly keep up. Schemes that lend themselves to simple replication and sharding seem obviously better and more pleasant to work with.
 
-If we genuinely want this kind of trust for data that matters we need *more* log operators *and* more logs. Operators that can accommodate multiple logs will have an advantage in both scope and scale. Given that there isn't likely, almost by definition, one log (or log operator) to rule them all, we need solid work on interoperability and standards. This allows parties to be served consistently, by the appropriate flavour of log, without being forced to accept trade offs that don't suit their needs. Ultimately, it's the data that should be interesting not the log format.
+Operators that can accommodate multiple logs will have an advantage in both scope and scale. Given that there isn't likely, almost by definition, one log (or log operator) to rule them all, we need solid work on interoperability and standards. This allows parties to be served consistently, by the appropriate flavour of log, without being forced to accept trade offs that don't suit their needs. Ultimately, it's the data that should be interesting not the log or proof formats.
 
-How we get things on to that log in a way that underpins this trust and enables discoverability and analysis is a *lot* more interesting in my opinion. The verifiable data structure itself is interesting from the operators perspective for how it supports this.
+How we get things on to that log in a way that underpins this trust and enables discoverability and analysis on verifiable data is a *lot* more interesting in my opinion. The verifiable data structure itself is interesting from the operators perspective for how it supports this.
 
 Back to the micro level, accumulator based logs are especially optimized for fast appends, simplicity of *bounded* replication and pruning of data for moments that don't matter any more. They are are also uniquely valuable for how they simplify receipt management for the data owner. Nobody wants receipts until they need them and typically if you didn't save one at the time you are out of luck. With a receipt based on a signed accumulator peak it is possible for the log operator to  *pre sign* the receipt (over the peak). The proof can be attached later by the log operator or *any* party in possession of the appropriate log chunk. There seem to me to be privacy benefits to this approach as well.
 
-The details on how this works, and also of efforts to help with standardization, can be found in the [MMRIVER draft](https://www.ietf.org/archive/id/draft-bryce-cose-merkle-mountain-range-proofs-00.html)
+The details on how these receipts work, and also of efforts to help with standardization, can be found in the [MMRIVER draft](https://www.ietf.org/archive/id/draft-bryce-cose-merkle-mountain-range-proofs-00.html)
 
 # So how does the accumulator help with storage organization ?
 
@@ -668,7 +668,7 @@ Which blockchain? It really doesn't matter much, and using more than one is like
 
 The price of this is the need to publish a suitable specification for [draft-ietf-cose-merkle-tree-proofs](https://datatracker.ietf.org/doc/draft-ietf-cose-merkle-tree-proofs/) and to create implementations and examples for verification.
 
-My [MMRIVER draft](https://www.ietf.org/archive/id/draft-bryce-cose-merkle-mountain-range-proofs-00.html) provides the specification and registration request.
+The [MMRIVER draft](https://www.ietf.org/archive/id/draft-bryce-cose-merkle-mountain-range-proofs-00.html) provides the specification and registration request.
 
 And examples for verification can be found in [datatrails-scitt-samples](https://github.com/datatrails/datatrails-scitt-samples/blob/main/datatrails_scitt_samples/cose_receipt_verification.py) and also [veracity](https://github.com/datatrails/veracity/) via [go-datatrails-merklelog](https://github.com/datatrails/go-datatrails-merklelog)
 
